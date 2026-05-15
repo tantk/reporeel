@@ -6,12 +6,22 @@
 
 ## HeyGen features used
 
-| Feature | Endpoint / framework | Role in the pipeline |
+| Feature | How we invoke it | Role in the pipeline |
 |---|---|---|
-| **Avatar IV** | `POST /v3/videos` with Photo Avatar `f20cdc89e0ec4b61bbe453d73019a997` (Madison) | Renders the 3 spoken scenes — the presenter in the bottom-right of every output video |
-| **Hyperframes** | `@hyperframes` (open-source framework) | Composes the slide deck around the avatar and stitches everything into one deterministic MP4 via headless Chrome + FFmpeg |
+| **Avatar IV** | Official **HeyGen CLI** ([`heygen-com/heygen-cli`](https://github.com/heygen-com/heygen-cli)) — `heygen video create --wait` with Photo Avatar `f20cdc89e0ec4b61bbe453d73019a997` (Madison) | Renders the 3 spoken scenes — the presenter in the bottom-right of every output video |
+| **Hyperframes** | Open-source `@hyperframes` framework — `hyperframes render` | Composes the slide deck around the avatar and stitches everything into one deterministic MP4 via headless Chrome + FFmpeg |
 
-Two HeyGen products are load-bearing nodes in the agent pipeline. Remove either and the agent breaks.
+Two HeyGen products are load-bearing nodes in the agent pipeline. Both are consumed through their **official, agent-first tooling** (CLI + framework) rather than reimplementing — so RepoReel is a vertical app on top of the HeyGen platform, not a duplicate of it.
+
+## Differentiation from related work
+
+The HeyGen ecosystem already includes:
+
+- **`heygen-com/skills`** — `heygen-avatar`, `heygen-video`, `heygen-translate` — the official platform skills for generic avatar/video/translate flows.
+- **`heygen-com/website-to-hyperframes`** — captures a website's UI as `<video>` clips and composes them via Hyperframes; uses ElevenLabs TTS (not Avatar IV); not Claude-orchestrated.
+- **`joshua-heygen/viz-pack`** — Claude skills that turn content into static visuals (diagrams, infographics, explainers, dashboards).
+
+RepoReel sits in the gap: **GitHub repo as input → Avatar IV-narrated presenter + Hyperframes-composed slides → single MP4**, with Claude driving the whole orchestration from one slash command. It's a vertical app on top of the platform, not a replacement for any of the existing skills.
 
 ## 🎬 Demo videos
 

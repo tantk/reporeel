@@ -116,10 +116,17 @@ If both pre-baked MP4s fail to load:
 
 **HeyGen features used:**
 
-| Feature | Endpoint / framework | Role in the pipeline |
+| Feature | How we invoke it | Role in the pipeline |
 |---|---|---|
-| **Avatar IV** | `POST /v3/videos` with Photo Avatar `f20cdc89e0ec4b61bbe453d73019a997` (Madison) | Renders the 3 spoken scenes — the presenter in the bottom-right of every output video |
-| **Hyperframes** | `@hyperframes` (open-source framework) | Composes the slide deck around the avatar and stitches everything into one deterministic MP4 via headless Chrome + FFmpeg |
+| **Avatar IV** | Official **HeyGen CLI** (`heygen video create --wait`) with Photo Avatar Madison | Renders the 3 spoken scenes — the presenter in the bottom-right of every output video |
+| **Hyperframes** | Open-source `@hyperframes` framework | Composes the slide deck around the avatar and stitches everything into one deterministic MP4 via headless Chrome + FFmpeg |
+
+Both are consumed through their official agent-first tooling, not reimplemented.
+
+**Differentiation from related work in the HeyGen ecosystem:**
+- **`heygen-com/skills`** (heygen-avatar / heygen-video / heygen-translate): generic platform skills for avatar/video/translate flows. RepoReel composes those primitives into a specific vertical.
+- **`heygen-com/website-to-hyperframes`**: similar URL-to-video pipeline but captures the *visual* of a website with Hyperframes and narrates via ElevenLabs. RepoReel reads a GitHub repo's text (README + metadata), narrates via HeyGen Avatar IV, and lays the avatar over a Hyperframes-composed slide deck.
+- **`joshua-heygen/viz-pack`**: Claude skills that produce static visuals (diagrams, infographics). RepoReel produces a narrated avatar video — different deliverable.
 
 **The full agent stack:**
 - **Driver:** Claude Code (Sonnet / Opus) reading a 200-line `SKILL.md`

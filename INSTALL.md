@@ -9,6 +9,7 @@ You need:
 1. **Claude Code** (CLI or VS Code extension) — https://claude.com/claude-code
 2. **HeyGen API key** — https://app.heygen.com → Settings → API → create key. You'll need at least a few credits ($5 top-up is plenty for a couple of test renders).
 3. **Node.js ≥ 22** + **FFmpeg** + **jq** + **Git Bash (Windows) or bash (mac/linux)**
+4. **HeyGen CLI** ([heygen-com/heygen-cli](https://github.com/heygen-com/heygen-cli)) — the official Go binary that the skill calls for Avatar IV renders
 
 Check you have everything:
 
@@ -18,6 +19,7 @@ npm --version
 ffmpeg -version | head -1
 jq --version
 bash --version | head -1
+heygen --version  # >= v0.0.10
 ```
 
 If you're missing any:
@@ -25,6 +27,19 @@ If you're missing any:
 - **Windows:** `winget install OpenJS.NodeJS jqlang.jq Gyan.FFmpeg Git.Git`
 - **macOS:** `brew install node jq ffmpeg`
 - **Linux:** `apt install nodejs npm jq ffmpeg git` (or your distro's equivalent)
+
+### HeyGen CLI install
+
+The skill drives renders through the official HeyGen CLI rather than raw curl. Install it:
+
+- **macOS / Linux / WSL:**
+  ```bash
+  curl -fsSL https://static.heygen.ai/cli/install.sh | bash
+  ```
+- **Windows (native):**
+  1. Download `heygen_<latest>_windows_amd64.zip` from https://github.com/heygen-com/heygen-cli/releases
+  2. Extract `heygen.exe` to `%USERPROFILE%\.local\bin\` (or anywhere on PATH)
+  3. Verify: `heygen --version`
 
 ## Step 1 — Clone
 

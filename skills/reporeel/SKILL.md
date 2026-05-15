@@ -1,6 +1,6 @@
 ---
 name: reporeel
-description: Use when the user types /reporeel <github-url> or asks to turn a GitHub repo into a narrated video walkthrough. Drives HeyGen Avatar IV for the presenter and Hyperframes for the slide-deck composition, ending in a single shareable MP4. Requires HEYGEN_API_KEY in C:\dev\heygen\.env.
+description: Use when the user types /reporeel <github-url> or asks to turn a GitHub repo into a narrated video walkthrough. Drives HeyGen Avatar IV (via the official heygen CLI) for the presenter and Hyperframes for the slide-deck composition, ending in a single shareable MP4. Requires the heygen CLI and HEYGEN_API_KEY in C:\dev\heygen\.env.
 ---
 
 # RepoReel — GitHub repo → narrated video walkthrough
@@ -164,17 +164,17 @@ If user replies with `edit <n> <new text>`: update that scene's `narration_text`
 
 If user replies `no`: stop. Leave `plan.json` on disk for later.
 
-### Step 5 — Render the avatar scenes (HeyGen Avatar IV)
+### Step 5 — Render the avatar scenes (HeyGen Avatar IV via the official CLI)
 
-Once approved, invoke the HeyGen render helper. **On Windows, you must call Git Bash explicitly** — the system `bash` on PATH may resolve to WSL, which lacks `jq`.
+Once approved, invoke the render helper. It calls the official **HeyGen CLI** (`heygen video create --wait` then `heygen video download`) — not raw curl — so we get HeyGen's structured error reporting, auth fallback, and built-in polling.
 
-Run via the Bash tool:
+**On Windows, you must call Git Bash explicitly** — the system `bash` on PATH may resolve to WSL, which lacks `jq`.
 
 ```bash
 "C:/Program Files/Git/bin/bash.exe" C:/dev/heygen/scripts/render-scenes.sh "<OUTPUT_DIR>/plan.json"
 ```
 
-If that path doesn't exist, fall back to:
+If Git Bash isn't installed there, fall back to:
 
 ```bash
 bash C:/dev/heygen/scripts/render-scenes.sh "<OUTPUT_DIR>/plan.json"
@@ -184,7 +184,11 @@ This call takes ~3 minutes (3 scene renders × ~60s each). Tell the user up fron
 
 The helper is idempotent — it skips any scene whose MP4 is already on disk. If it fails partway, you can re-run it and only missing scenes will hit HeyGen.
 
-If the command fails for any other reason, report the error verbatim and stop. Do not retry blindly — HeyGen credits are real money.
+**Prerequisite:** the `heygen` CLI must be on PATH. The script errors with installation instructions if it's missing. Install commands:
+- macOS / Linux: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash`
+- Windows: download `heygen_<version>_windows_amd64.zip` from https://github.com/heygen-com/heygen-cli/releases and extract `heygen.exe` somewhere on PATH (e.g. `~/.local/bin`).
+
+If the render command fails for any other reason, report the error verbatim and stop. Do not retry blindly — HeyGen credits are real money.
 
 ### Step 6 — Compose and render the final video (Hyperframes)
 
@@ -230,6 +234,7 @@ Offer to open it via PowerShell: `Start-Process "<OUTPUT_DIR>\final.mp4"`.
 - **`MOVIO_PAYMENT_INSUFFICIENT_CREDIT`** — `POST /v3/videos` returns this when the HeyGen account is out of API credits. Report it and stop. The user must top up at app.heygen.com → Billing.
 - **`This video avatar does not support Avatar IV video generation`** — the avatar in `reference/default-avatar.json` was removed or isn't Avatar IV-compatible. Pick a new Photo Avatar from `GET /v3/avatars/looks?avatar_type=photo_avatar&ownership=public` and update the reference file.
 - **WSL bash used instead of Git Bash (Step 5 or 6)** — script fails with `jq: command not found` or `ffprobe: command not found`. Re-invoke using the full Git Bash path: `"C:/Program Files/Git/bin/bash.exe"`.
+- **`heygen: command not found`** — the HeyGen CLI isn't installed or isn't on PATH. See Step 5 prerequisites for the install link, then re-run.
 - **Hyperframes render fails with `video first frame not decoded`** — usually a transient. Re-run `compose-and-render.sh`; it picks up the already-rendered scenes from cache and only re-runs the Hyperframes encode.
 - **Hyperframes lint errors** — composition placeholders weren't all substituted. Check `hyperframes-build/index.html` for leftover `__SOMETHING__` strings and patch the template if needed.
 
