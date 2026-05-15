@@ -28,36 +28,114 @@ Use the `WebFetch` tool with the GitHub REST API:
 - `https://api.github.com/repos/<owner>/<repo>` — extract: `description`, `language`, `stargazers_count`, `topics`, `default_branch`.
 - `https://raw.githubusercontent.com/<owner>/<repo>/<default_branch>/README.md` — full README text. If 404 (no README), proceed with metadata only.
 
-### Step 3 — Plan the 3 scenes
+### Step 3 — Plan the 3 scenes (narration + visual content)
 
-Using the metadata + README you just fetched, produce **exactly 3 scenes** as your own reasoning output (no external LLM call):
+Using the metadata + README, produce **exactly 3 scenes**. Each scene has two parts:
 
-1. **`intro`** — "What is this?" — 35–45 words of natural spoken narration covering: what the repo does, who it's for, the standout feature. CTA label: `"Explore"`.
-2. **`tour`** — "Tour the code" — 35–45 words covering: top-level structure, the most interesting file or module, what a contributor reads first. CTA label: `"Tour the code"`.
-3. **`run`** — "See it run" — 35–45 words covering: install command, one realistic usage example, what success looks like. CTA label: `"See it run"`.
+- **`narration_text`** — what the avatar SAYS (35–45 words, ~15s spoken)
+- **`stats` / `steps` / `lines`** — what the SLIDE shows alongside the avatar
 
-Rules for narration:
-- Spoken cadence: short sentences, no jargon dumps, no bullet points, no code syntax read aloud.
-- Each ~40 words ≈ 15 seconds of speech.
-- Never invent features. If the README is thin, say so naturally ("the repo's still early — here's what's there").
+The narration and the slide must reinforce each other. The narration is *about the repo*. The slides should be too — not about RepoReel.
 
-Write the plan to `<OUTPUT_DIR>/plan.json`:
+#### Scene specs
+
+1. **`intro` — "What is this?" (slide: repo card with stats panel)**
+   - Narration covers: what the repo does, who it's for, the standout feature.
+   - Slide gets 1–3 `stats` to display in a row. **Pick meaningful stats, skip junk.**
+
+2. **`tour` — "How it works" (slide: 4 numbered steps showing the repo's architecture or concepts)**
+   - Narration covers: the top-level mental model of the repo.
+   - Slide gets a `label` (eyebrow text like "ARCHITECTURE", "HOW IT RENDERS", "CORE CONCEPTS") and an array of 3–4 `steps`, each with a `name` and short `desc`.
+   - These should be **about the repo's concepts** (e.g., for commander.js: Options → Commands → Action handlers → Help generation), not RepoReel's pipeline.
+
+3. **`run` — "Try it" (slide: terminal showing the repo's install + usage)**
+   - Narration covers: install command, one realistic usage example, what success looks like.
+   - Slide gets a `terminal_title` (e.g. `~/projects · commander`) and an array of `lines`. Each line is either `{prompt, cmd, accent?}` (a typed command) or `{out}` (output text) or `{spacer: true}` (visual gap).
+   - Use commands from the repo's README — `npm install`, `pip install`, `cargo add`, whatever's idiomatic.
+
+#### Stat picking — be smart
+
+For Scene 1's `stats` panel, pick from this menu, **prioritizing values that say something interesting**:
+
+| Stat | Use when… | Skip when… |
+|---|---|---|
+| `★ stars` | repo has > 100 stars | < 50 stars (looks like a graveyard) |
+| `language` | always meaningful | — |
+| `license` | non-empty, non-`NOASSERTION` | empty or proprietary |
+| `contributors` | > 5 | personal project |
+| `latest release` | has tagged releases | no releases |
+| `topics` | has GitHub topics | none set |
+| `last commit` | very recent (< 30 days) | always |
+| `size` | huge (> 10MB) or notably tiny | typical mid-size |
+
+**Hard rule:** never display `0 stars`, `no license`, `0 contributors`, or any other zero/empty value. Drop the stat entirely. Show 1 or 2 instead of padding with garbage. New hackathon repos often have 0 of everything — for those, prefer stats like `language`, `last commit: today`, or even just `created: today`.
+
+#### plan.json shape
+
+Write to `<OUTPUT_DIR>/plan.json`:
 
 ```json
 {
   "title": "<owner>/<repo>",
-  "description": "<one-line from GitHub>",
+  "description": "<one-line from GitHub repo description>",
   "avatar_id": "f20cdc89e0ec4b61bbe453d73019a997",
   "voice_id": "cef3bc4e0a84424cafcde6f2cf466c97",
   "scenes": [
-    {"id": "intro", "title": "What is this?", "narration_text": "...", "cta_label": "Explore"},
-    {"id": "tour",  "title": "Tour the code", "narration_text": "...", "cta_label": "Tour the code"},
-    {"id": "run",   "title": "See it run",    "narration_text": "...", "cta_label": "See it run"}
+    {
+      "id": "intro",
+      "title": "What is this?",
+      "narration_text": "<35-45 words>",
+      "cta_label": "Explore",
+      "stats": [
+        { "num": "18.4k", "lbl": "★ stars" },
+        { "num": "Apache 2.0", "lbl": "license" },
+        { "num": "TypeScript", "lbl": "language" }
+      ]
+    },
+    {
+      "id": "tour",
+      "title": "How it works",
+      "narration_text": "<35-45 words>",
+      "cta_label": "Tour the code",
+      "label": "HOW IT RENDERS",
+      "steps": [
+        { "name": "HTML composition", "desc": "Plain HTML + data attributes" },
+        { "name": "Headless Chrome",  "desc": "Plays the composition deterministically" },
+        { "name": "Frame capture",    "desc": "Every frame written via Puppeteer" },
+        { "name": "FFmpeg encode",    "desc": "Frames stitched into a final MP4" }
+      ]
+    },
+    {
+      "id": "run",
+      "title": "Try it",
+      "narration_text": "<35-45 words>",
+      "cta_label": "See it run",
+      "terminal_title": "~/projects",
+      "lines": [
+        { "prompt": "$", "cmd": "npx hyperframes init my-video" },
+        { "out": "Created my-video/" },
+        { "spacer": true },
+        { "prompt": "$", "cmd": "npm run render" },
+        { "out": "→ Compiling composition..." },
+        { "out": "→ Capturing frames in headless Chrome..." },
+        { "out": "→ Encoding via FFmpeg..." },
+        { "spacer": true },
+        { "out": "✓ Render complete. renders/my-video.mp4", "success": true }
+      ]
+    }
   ]
 }
 ```
 
-The `avatar_id` and `voice_id` shown above are the defaults (Madison Photo Avatar / Ivy voice). They're also stored in `reference/default-avatar.json` for the render helper. Don't change them per repo — the goal is consistent presenter identity across all RepoReel videos.
+#### Narration rules
+- Spoken cadence: short sentences, no jargon dumps, no bullet points, no code syntax read aloud.
+- Each ~40 words ≈ 15 seconds of speech.
+- **Never invent features.** If the README is thin, say so naturally ("the repo's still early — here's what's there").
+
+#### Defaults if you can't fill in visual content
+- If the README is too thin to pick `stats`, `steps`, or `lines`, leave those fields **out entirely** (don't pass empty arrays). The build script will substitute generic fallback content rather than render junk.
+
+The `avatar_id` and `voice_id` shown above are the defaults (Madison Photo Avatar / Ivy voice). Don't change them per repo — consistent presenter identity is part of the brand.
 
 Use the `Write` tool. Create the directory first if needed (PowerShell: `New-Item -ItemType Directory -Force -Path "<OUTPUT_DIR>"`).
 

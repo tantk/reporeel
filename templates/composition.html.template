@@ -289,9 +289,7 @@
           <h2 id="rc-name">__REPO_NAME__</h2>
           <div class="tagline" id="rc-tag">__TAGLINE__</div>
           <div class="stats">
-            <div class="stat"><span class="num">3</span><span class="lbl">scenes</span></div>
-            <div class="stat"><span class="num">~3 min</span><span class="lbl">render time</span></div>
-            <div class="stat"><span class="num">/reporeel</span><span class="lbl">claude code skill</span></div>
+            __STATS_HTML__
           </div>
         </div>
       </div>
@@ -301,11 +299,8 @@
 
       <div id="scene-2" class="clip stage" data-start="__TOUR_START__" data-duration="__TOUR_DUR__" data-track-index="3">
         <div class="pipeline">
-          <div class="label">PIPELINE</div>
-          <div class="step" id="p1"><div class="badge">1</div><div class="body"><div class="name">Fetch repo</div><div class="desc">Claude WebFetches README + GitHub metadata</div></div></div>
-          <div class="step" id="p2"><div class="badge">2</div><div class="body"><div class="name">Plan scenes</div><div class="desc">Claude writes 3 narration scripts in-session</div></div></div>
-          <div class="step" id="p3"><div class="badge">3</div><div class="body"><div class="name">Render avatars</div><div class="desc">HeyGen Avatar IV via REST API</div></div></div>
-          <div class="step" id="p4"><div class="badge">4</div><div class="body"><div class="name">Assemble</div><div class="desc">Hyperframes composes the final MP4</div></div></div>
+          <div class="label">__TOUR_LABEL__</div>
+          __STEPS_HTML__
         </div>
       </div>
       <div id="lbl-tour" class="clip scene-label" data-start="__TOUR_START__" data-duration="__TOUR_DUR__" data-track-index="4">
@@ -316,17 +311,10 @@
         <div class="terminal">
           <div class="term-bar">
             <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-            <span class="title">claude code · ~/projects</span>
+            <span class="title">__TERMINAL_TITLE__</span>
           </div>
           <div class="term-body">
-            <div><span class="prompt">$</span> <span class="cmd">claude</span></div>
-            <div class="out">Claude Code · ready</div>
-            <div style="margin-top: 14px;"><span class="prompt">&gt;</span> <span class="cmd">/reporeel </span><span class="accent">__GITHUB_URL__</span></div>
-            <div class="out" style="margin-top: 14px;">→ Fetching repo metadata...</div>
-            <div class="out">→ Planning 3 scenes...</div>
-            <div class="out">→ Rendering via HeyGen Avatar IV...</div>
-            <div class="out">→ Assembling Hyperframes composition...</div>
-            <div class="out" style="margin-top: 14px; color: #6fff8a;">✓ Done. outputs/__OWNER_REPO_FLAT__/final.mp4</div>
+            __LINES_HTML__
           </div>
         </div>
       </div>
@@ -364,10 +352,7 @@
 
       // Scene 2: pipeline steps stagger
       tl.from("#scene-2 .label", { opacity: 0, x: -40, duration: 0.5, ease: "power2.out" }, __TOUR_START__ + 0.3);
-      tl.from("#p1", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, __TOUR_START__ + 0.6);
-      tl.from("#p2", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, __TOUR_START__ + 1.4);
-      tl.from("#p3", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, __TOUR_START__ + 2.2);
-      tl.from("#p4", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, __TOUR_START__ + 3.0);
+__STEPS_GSAP__
       tl.to("#scene-2", { opacity: 0, duration: 0.4, ease: "power2.in" }, __RUN_START__ - 0.6);
       tl.set("#scene-2", { opacity: 0 }, __RUN_START__);
 
