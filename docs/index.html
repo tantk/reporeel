@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RepoReel — Turn any GitHub repo into a narrated video</title>
+<meta name="description" content="An AI agent that turns any GitHub repo into a narrated video walkthrough. Claude orchestrates HeyGen Avatar IV and Hyperframes from a single slash command." />
+<meta property="og:title" content="RepoReel — AI agent for repo video walkthroughs" />
+<meta property="og:description" content="Claude orchestrates HeyGen Avatar IV and Hyperframes from a single slash command. Built for the HeyGen Hackathon, May 2026." />
+<meta property="og:type" content="website" />
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: #0a0a14;
+    color: #eaeaf2;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+  body {
+    background:
+      radial-gradient(circle at 20% 0%, rgba(111,111,255,0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 90%, rgba(200,95,69,0.10) 0%, transparent 55%),
+      #0a0a14;
+  }
+  .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+  header { padding: 4rem 0 2rem; }
+  .badge {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgba(140,140,255,0.35);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #b8b8ff;
+    background: rgba(20,20,40,0.6);
+    margin-bottom: 1.5rem;
+  }
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.25rem;
+    background: linear-gradient(135deg, #fff 0%, #b8b8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .tagline {
+    font-size: 1.35rem;
+    opacity: 0.78;
+    max-width: 720px;
+    margin-bottom: 2rem;
+  }
+  .cta-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.3rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.1s, border-color 0.15s;
+  }
+  .btn.primary {
+    background: linear-gradient(135deg, #6f6fff, #4040c0);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(111,111,255,0.35);
+  }
+  .btn.primary:hover { transform: translateY(-1px); }
+  .btn.secondary {
+    background: transparent;
+    color: #d0d0ff;
+    border: 1px solid rgba(140,140,255,0.3);
+  }
+  .btn.secondary:hover { border-color: rgba(140,140,255,0.7); color: #fff; }
+  section { padding: 2.5rem 0; border-top: 1px solid rgba(255,255,255,0.06); }
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .section-eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: #8a8aff;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  .videos { display: grid; gap: 2rem; }
+  @media (min-width: 720px) { .videos { grid-template-columns: 1fr 1fr; } }
+  .video-card .video-label {
+    font-size: 0.85rem;
+    opacity: 0.65;
+    margin-bottom: 0.5rem;
+  }
+  .video-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  .video-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(140,140,255,0.2);
+    background: #000;
+  }
+  .video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .pipeline {
+    background: rgba(20,20,40,0.4);
+    border: 1px solid rgba(140,140,255,0.15);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-top: 1rem;
+    font-family: "SF Mono", "Consolas", "Cascadia Code", monospace;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .pipeline .arrow { color: #6f6fff; }
+  .pipeline .step-num { color: #ffbd2e; font-weight: 600; }
+  .stack-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  .stack-table th, .stack-table td {
+    text-align: left;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    vertical-align: top;
+  }
+  .stack-table th {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #8a8aff;
+    font-weight: 500;
+  }
+  .stack-table .feature { font-weight: 600; }
+  .stack-table code {
+    background: rgba(20,20,40,0.7);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #d8d8ff;
+  }
+  pre.install {
+    background: #0c0c18;
+    border: 1px solid rgba(140,140,255,0.2);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-top: 1rem;
+  }
+  pre.install .prompt { color: #6fff8a; }
+  pre.install .comment { color: #5a5a78; }
+  footer {
+    padding: 3rem 0 2rem;
+    margin-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.85rem;
+    opacity: 0.55;
+    text-align: center;
+  }
+  footer a { color: #b8b8ff; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <span class="badge">HeyGen Hackathon · Agent Track · May 2026</span>
+  <h1>RepoReel</h1>
+  <p class="tagline">
+    An AI agent that turns any GitHub repo into a narrated video walkthrough —
+    Claude orchestrates HeyGen Avatar IV and Hyperframes from a single slash command.
+  </p>
+  <div class="cta-row">
+    <a class="btn primary" href="https://github.com/tantk/reporeel" target="_blank" rel="noopener">View on GitHub →</a>
+    <a class="btn secondary" href="https://github.com/tantk/reporeel/blob/master/INSTALL.md" target="_blank" rel="noopener">Install (5 min)</a>
+    <a class="btn secondary" href="https://github.com/tantk/reporeel/blob/master/skills/reporeel/SKILL.md" target="_blank" rel="noopener">Read the SKILL.md</a>
+  </div>
+</header>
+
+<section>
+  <div class="section-eyebrow">Demo</div>
+  <h2>Watch the agent run</h2>
+  <p style="opacity:0.7; margin-bottom: 1.5rem; max-width: 720px;">
+    Two videos, autogenerated by the same agent on two different repos.
+    The avatar is HeyGen Avatar IV. The slide deck beside it is composed by Hyperframes.
+    The narration was written by Claude during the skill run.
+  </p>
+  <div class="videos">
+    <div class="video-card">
+      <div class="video-label">Demo 1 · 63 seconds</div>
+      <h3>RepoReel on RepoReel <span style="opacity:0.5;">(the meta video)</span></h3>
+      <div class="video-frame">
+        <iframe src="https://www.youtube.com/embed/DBeDU9EDAPs" title="RepoReel on RepoReel" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+      </div>
+    </div>
+    <div class="video-card">
+      <div class="video-label">Demo 2 · 75 seconds</div>
+      <h3>RepoReel on <code style="background:rgba(20,20,40,0.7);padding:0.1rem 0.4rem;border-radius:4px;">heygen-com/hyperframes</code></h3>
+      <div class="video-frame">
+        <iframe src="https://www.youtube.com/embed/OrBq-vtvimw" title="RepoReel on heygen-com/hyperframes" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-eyebrow">Agent pipeline</div>
+  <h2>The whole orchestration is 200 lines of markdown</h2>
+  <p style="opacity:0.7; max-width: 720px; margin-bottom: 0;">
+    Claude reads <code style="background:rgba(20,20,40,0.7);padding:0.1rem 0.4rem;border-radius:4px;">SKILL.md</code> and runs the workflow step-by-step. No backend, no Anthropic API key, no hidden state.
+  </p>
+  <div class="pipeline">
+USER: /reporeel github.com/owner/repo<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">│</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">▼</span><br>
+Claude Code session (the orchestrator)<br>
+&nbsp;&nbsp;<span class="step-num">1.</span> WebFetch&nbsp;&nbsp;<span class="arrow">────</span> GitHub REST API + raw README.md<br>
+&nbsp;&nbsp;<span class="step-num">2.</span> Reason&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">────</span> Claude plans 3 scenes (35–45 words each)<br>
+&nbsp;&nbsp;<span class="step-num">3.</span> Approval&nbsp;&nbsp;<span class="arrow">────</span> show plan in chat, wait for `y`<br>
+&nbsp;&nbsp;<span class="step-num">4.</span> Bash&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">────</span> render-scenes.sh → <strong>HeyGen Avatar IV</strong> /v3/videos × 3<br>
+&nbsp;&nbsp;<span class="step-num">5.</span> Write&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">────</span> Hyperframes composition (HTML)<br>
+&nbsp;&nbsp;<span class="step-num">6.</span> Bash&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">────</span> <strong>Hyperframes render</strong> → headless Chrome + FFmpeg<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">│</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">▼</span><br>
+outputs/&lt;owner&gt;--&lt;repo&gt;/final.mp4
+  </div>
+</section>
+
+<section>
+  <div class="section-eyebrow">HeyGen features used</div>
+  <h2>Two HeyGen products. Both load-bearing.</h2>
+  <p style="opacity:0.7; max-width: 720px;">
+    Avatar IV is the paid REST API node. Hyperframes is the open-source local-render node. Remove either and the agent breaks.
+  </p>
+  <table class="stack-table">
+    <thead>
+      <tr><th>Feature</th><th>Endpoint / framework</th><th>Role in the pipeline</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="feature">Avatar IV</td>
+        <td><code>POST /v3/videos</code> with Photo Avatar Madison</td>
+        <td>Renders the 3 spoken scenes — the presenter you see in the bottom-right of every output video.</td>
+      </tr>
+      <tr>
+        <td class="feature">Hyperframes</td>
+        <td><code>@hyperframes</code> (open-source framework)</td>
+        <td>Composes the slide deck around the avatar and stitches everything into one deterministic MP4 via headless Chrome + FFmpeg.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-eyebrow">Install</div>
+  <h2>Try it yourself (5 minutes)</h2>
+  <pre class="install"><span class="prompt">$</span> git clone https://github.com/tantk/reporeel C:\dev\reporeel
+<span class="prompt">$</span> cd C:\dev\reporeel
+<span class="prompt">$</span> cp .env.example .env  <span class="comment"># then add your HeyGen API key</span>
+<span class="prompt">$</span> npm i -g hyperframes
+
+<span class="comment"># Link the skill into Claude Code</span>
+<span class="prompt">$</span> ln -s "$PWD/skills/reporeel" ~/.claude/skills/reporeel
+
+<span class="comment"># Restart Claude Code, then in any session:</span>
+<span class="prompt">&gt;</span> /reporeel https://github.com/anthropics/claude-code</pre>
+  <p style="opacity:0.7; margin-top:1rem;">
+    Full setup including Windows + macOS commands and troubleshooting:
+    <a href="https://github.com/tantk/reporeel/blob/master/INSTALL.md" style="color:#b8b8ff;">INSTALL.md</a>
+  </p>
+</section>
+
+<footer>
+  Built for the
+  <a href="https://heygen.com" target="_blank" rel="noopener">HeyGen</a>
+  Hackathon · May 2026 · <a href="https://github.com/tantk/reporeel" target="_blank" rel="noopener">github.com/tantk/reporeel</a>
+</footer>
+
+</div>
+</body>
+</html>
