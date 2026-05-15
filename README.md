@@ -1,8 +1,17 @@
 # RepoReel
 
-**An AI agent that turns any GitHub repo into a presentable video walkthrough.** Claude reads the repo, writes the narration, drives HeyGen Avatar IV for the presenter, and composes the final MP4 with Hyperframes — all in a single slash command.
+**An AI agent that turns any GitHub repo into a narrated video walkthrough — Claude orchestrates HeyGen Avatar IV and Hyperframes from a single slash command.**
 
 > **HeyGen Hackathon · Agent Track · May 2026**
+
+## HeyGen features used
+
+| Feature | Endpoint / framework | Role in the pipeline |
+|---|---|---|
+| **Avatar IV** | `POST /v3/videos` with Photo Avatar `f20cdc89e0ec4b61bbe453d73019a997` (Madison) | Renders the 3 spoken scenes — the presenter in the bottom-right of every output video |
+| **Hyperframes** | `@hyperframes` (open-source framework) | Composes the slide deck around the avatar and stitches everything into one deterministic MP4 via headless Chrome + FFmpeg |
+
+Two HeyGen products are load-bearing nodes in the agent pipeline. Remove either and the agent breaks.
 
 ## 🎬 Demo videos
 

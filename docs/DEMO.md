@@ -112,14 +112,21 @@ If both pre-baked MP4s fail to load:
 
 **Track:** Agent Track
 
-**One-liner:** An AI agent that turns any GitHub repo into a presentable video walkthrough. Claude reads the repo, writes the narration, drives HeyGen Avatar IV for the presenter, and composes the final MP4 with Hyperframes — all from one slash command.
+**One-liner:** An AI agent that turns any GitHub repo into a narrated video walkthrough — Claude orchestrates HeyGen Avatar IV and Hyperframes from a single slash command.
 
-**The agent stack:**
+**HeyGen features used:**
+
+| Feature | Endpoint / framework | Role in the pipeline |
+|---|---|---|
+| **Avatar IV** | `POST /v3/videos` with Photo Avatar `f20cdc89e0ec4b61bbe453d73019a997` (Madison) | Renders the 3 spoken scenes — the presenter in the bottom-right of every output video |
+| **Hyperframes** | `@hyperframes` (open-source framework) | Composes the slide deck around the avatar and stitches everything into one deterministic MP4 via headless Chrome + FFmpeg |
+
+**The full agent stack:**
 - **Driver:** Claude Code (Sonnet / Opus) reading a 200-line `SKILL.md`
 - **Input node:** Claude's `WebFetch` tool → GitHub REST API + raw README
 - **Reasoning node:** Claude (in-session, no external LLM call) writes 3-scene narration
-- **Render node:** **HeyGen Avatar IV** (`POST /v3/videos` with Madison Photo Avatar `f20cdc89e0ec4b61bbe453d73019a997`) — 3 spoken scenes
-- **Composition node:** **Hyperframes** (`@hyperframes`, open source) — HTML slide deck + headless-Chrome frame capture + FFmpeg encode into the final MP4
+- **Render node:** HeyGen Avatar IV — 3 spoken scenes
+- **Composition node:** Hyperframes — HTML slide deck + headless-Chrome frame capture + FFmpeg encode into the final MP4
 
 **The pipeline is fully visible.** Every step is in `skills/reporeel/SKILL.md`, in plain English. Auditable, forkable, no hidden state.
 
