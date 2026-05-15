@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
-# compose-and-render.sh — given plan.json + scene MP4s, build the Hyperframes
-# composition (with per-repo dynamic content from plan.json) and render final.mp4.
+# compose-and-render.sh — render the Hyperframes composition to final.mp4.
 #
-# Usage: ./compose-and-render.sh <path-to-plan.json>
+# In the Claude-as-designer flow, Claude has already written
+# hyperframes-build/index.html using the skill instructions. This script just
+# handles the I/O: copy the scene MP4s into the assets dir, lint the
+# composition, then render.
+#
+# Usage:
+#   ./compose-and-render.sh <path-to-plan.json>
 #
 # Expects:
-#   $OUTPUT_DIR/plan.json            (with scenes[].stats / .steps / .lines)
-#   $OUTPUT_DIR/scenes/{intro,tour,run}.mp4
+#   $OUTPUT_DIR/plan.json                 (for locating the output dir)
+#   $OUTPUT_DIR/scenes/{intro,tour,run}.mp4   (from render-scenes.sh)
+#   hyperframes-build/index.html          (already written by the agent)
 #
 # Writes:
-#   $OUTPUT_DIR/final.mp4            (the deliverable)
-#   hyperframes-build/index.html     (substituted composition, in place)
-#   hyperframes-build/assets/*.mp4   (scene MP4s copied for the renderer)
+#   $OUTPUT_DIR/final.mp4                 (the deliverable)
+#   hyperframes-build/assets/*.mp4        (scene MP4s copied for the renderer)
 
 set -euo pipefail
 
@@ -23,10 +28,15 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_DIR="$(dirname "$PLAN")"
 SCENES_DIR="$OUTPUT_DIR/scenes"
 HF_DIR="$REPO_ROOT/hyperframes-build"
-TEMPLATE="$REPO_ROOT/templates/composition.html.template"
 
 [[ -d "$HF_DIR" ]] || { echo "hyperframes-build not found. Run 'npx hyperframes init hyperframes-build' first." >&2; exit 1; }
-[[ -f "$TEMPLATE" ]] || { echo "Template missing at $TEMPLATE" >&2; exit 1; }
+[[ -f "$HF_DIR/index.html" ]] || {
+  echo "[error] hyperframes-build/index.html not found." >&2
+  echo "  The agent should write this file before calling compose-and-render.sh." >&2
+  echo "  See skills/reporeel/references/hyperframes-patterns.md for the format." >&2
+  echo "  Or use the fallback: copy templates/composition.html.template + run scripts/compose.js" >&2
+  exit 1
+}
 for s in intro tour run; do
   [[ -s "$SCENES_DIR/$s.mp4" ]] || { echo "missing scene MP4: $SCENES_DIR/$s.mp4 (run render-scenes.sh first)" >&2; exit 1; }
 done
@@ -37,10 +47,17 @@ cp -f "$SCENES_DIR/intro.mp4" "$HF_DIR/assets/intro.mp4"
 cp -f "$SCENES_DIR/tour.mp4"  "$HF_DIR/assets/tour.mp4"
 cp -f "$SCENES_DIR/run.mp4"   "$HF_DIR/assets/run.mp4"
 
-# --- Build the composition HTML via the Node templating script ---
-# (compose.js writes the HTML to stdout, timing summary to stderr)
-echo "[compose] generating composition for $(jq -r '.title' "$PLAN")..."
-node "$REPO_ROOT/scripts/compose.js" "$PLAN" "$TEMPLATE" > "$HF_DIR/index.html"
+# --- Lint the composition (must pass with 0 errors) ---
+echo "[check] validating hyperframes-build/index.html..."
+(
+  cd "$HF_DIR"
+  if ! npm run check 2>&1 | tail -15; then
+    echo "" >&2
+    echo "[error] composition lint failed. Fix the errors above and re-run." >&2
+    echo "  See skills/reporeel/references/hyperframes-patterns.md for the lint rules." >&2
+    exit 1
+  fi
+)
 
 # --- Render via Hyperframes ---
 echo "[render] starting Hyperframes render (~90s for a 60s composition)..."

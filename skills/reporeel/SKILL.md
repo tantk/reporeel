@@ -190,26 +190,55 @@ The helper is idempotent — it skips any scene whose MP4 is already on disk. If
 
 If the render command fails for any other reason, report the error verbatim and stop. Do not retry blindly — HeyGen credits are real money.
 
-### Step 6 — Compose and render the final video (Hyperframes)
+### Step 6 — Design the Hyperframes composition (you write the HTML)
 
-Now invoke the Hyperframes composition + render helper. This step takes the scene MP4s from Step 5, substitutes repo-specific content into `templates/composition.html.template`, and renders the final MP4 via headless Chrome + FFmpeg.
+**You are the designer.** Don't fill in a fixed template — author the Hyperframes composition fresh for this repo's content. Different repos should look different. A graph database deserves a node diagram; a CLI deserves a terminal mock; a web framework deserves a code block + browser preview.
 
-```bash
-"C:/Program Files/Git/bin/bash.exe" C:/dev/heygen/scripts/compose-and-render.sh "<OUTPUT_DIR>/plan.json"
-```
+**Required reading before you start:** open `C:\dev\heygen\skills\reporeel\references\hyperframes-patterns.md`. It has the fixed brand constraints (avatar in corner, stage dimensions, lint rules), the required structure, timing math, and several patterns you can adapt.
 
-This takes ~90s for a typical 60–80 second composition. The script:
-1. Probes the duration of each scene MP4
-2. Computes scene start/end times + buffers
-3. Substitutes `__TITLE__`, `__TAGLINE__`, `__OWNER_REPO__`, `__GITHUB_URL__`, and all the timing placeholders into the template
-4. Writes the substituted composition to `hyperframes-build/index.html`
-5. Copies the scene MP4s into `hyperframes-build/assets/`
-6. Runs `npm run render` (which invokes `hyperframes render`)
-7. Moves the output to `<OUTPUT_DIR>/final.mp4`
+**The fixed parts** (don't redesign these — copy them straight from the patterns doc):
+1. Stage size 1920 × 1080, dark background.
+2. The avatar frame + 3 narration `<video>` elements in the bottom-right corner.
+3. A 2s opening title card, 1s outro card.
+4. Scene labels at bottom-left.
+5. GSAP timeline registered on `window.__timelines["main"]`.
 
-Tell the user: "Composing the final video with Hyperframes — about 90 seconds."
+**The free parts** (design these per repo):
+- Scene 1 content (introduces the repo) — headline + stats + tagline, or hero card with logo, or screenshot mockup, etc.
+- Scene 2 content (the mental model) — numbered pipeline, API surface, file tree, architecture diagram, before/after, side-by-side, whatever fits the repo.
+- Scene 3 content (how to use it) — terminal mock, code snippet, install graphic, animated example, etc.
+- Color accents — default purple is fine, but you can theme per-language (JS yellow, Python blue, Rust orange — see patterns doc).
+- Typography, spacing, animation style — your call within the brand constraints.
 
-If Hyperframes is missing (`npm: command not found` or template error), tell the user to run `npm install -g hyperframes` and retry.
+**Workflow inside this step:**
+
+1. Probe the 3 scene MP4 durations (you need them for the timing math):
+   ```bash
+   for s in intro tour run; do
+     ffprobe -v error -show_entries format=duration -of csv=p=0 "<OUTPUT_DIR>/scenes/$s.mp4"
+   done
+   ```
+   Round up each one, add a 1–2s buffer. Then compute `intro_start=2`, `tour_start=2+intro_dur`, `run_start=tour_start+tour_dur`, `outro_start=run_start+run_dur`, `total=outro_start+1`.
+
+2. Read `references/hyperframes-patterns.md` if you haven't.
+
+3. Write a custom composition to `C:\dev\heygen\hyperframes-build\index.html` using the `Write` tool. Use the patterns doc's "Required structure" as the skeleton. Paste the avatar slot block verbatim. Design the 3 scene stages around the repo.
+
+4. Run the lint loop:
+   ```bash
+   cd C:/dev/heygen/hyperframes-build && npm run check
+   ```
+   - **0 errors** → proceed to render.
+   - **Lint errors** → fix them (most common: video nested in timed element, overlapping clips on same track, missing hard-kill set after fade-out). Re-run check. Loop until clean.
+
+5. Trigger the render via the build script (it copies the scene MP4s into `hyperframes-build/assets/` and runs `npm run render`):
+   ```bash
+   "C:/Program Files/Git/bin/bash.exe" C:/dev/heygen/scripts/compose-and-render.sh "<OUTPUT_DIR>/plan.json"
+   ```
+
+Tell the user up front: "Designing a custom composition for this repo, then rendering — about 2 minutes."
+
+**Fallback:** if you can't confidently design from scratch (very thin README, exotic repo type), copy `templates/composition.html.template` into `hyperframes-build/index.html` and run `scripts/compose.js` to substitute placeholders from `plan.json`. That gives you the previous "fixed-brand" output. Note in the deliver step that you used the fallback template.
 
 ### Step 7 — Deliver
 
@@ -243,8 +272,12 @@ Offer to open it via PowerShell: `Start-Process "<OUTPUT_DIR>\final.mp4"`.
 - Customizing avatars per repo (always uses Madison from `reference/default-avatar.json`)
 - Multi-language output (single-language; could be added via HeyGen Video Translate)
 - More than 3 scenes
+- Redesigning the avatar slot (fixed brand)
 - Authentication, accounts, persistence beyond local files
 
-## Optional: the interactive HTML player
+## Alternate outputs
 
-`templates/player.html` is an older deliverable — an interactive branching HTML page that plays the scene MP4s with click-through buttons (the "Hyperframe-as-Code" pattern from before we integrated real Hyperframes). It's still in the repo as a fallback / alternate output, but the canonical deliverable is now the single MP4 at `final.mp4`. If a user explicitly asks for the interactive HTML player, you can produce it by reading `templates/player.html`, substituting `__TITLE__` and `__PLAN_JSON__`, and writing the result to `<OUTPUT_DIR>/player.html`.
+Two legacy deliverables are still in the repo for fallback / alternate use cases:
+
+- **`templates/composition.html.template`** + `scripts/compose.js` — the fixed-brand fallback template. Use it via the "Fallback" path in Step 6 if you can't confidently design from scratch.
+- **`templates/player.html`** — an interactive branching HTML page that plays the scene MP4s with click-through buttons (the original "Hyperframe-as-Code" pattern). The canonical deliverable is `final.mp4`, but if a user explicitly asks for the interactive HTML player, you can produce it by reading `templates/player.html`, substituting `__TITLE__` and `__PLAN_JSON__`, and writing the result to `<OUTPUT_DIR>/player.html`.
