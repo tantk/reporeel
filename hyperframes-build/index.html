@@ -26,7 +26,7 @@
           linear-gradient(180deg, #0a0a14 0%, #050510 100%);
       }
 
-      /* Avatar in bottom-right corner */
+      /* Avatar frame — always-on visual chrome (filled so empty doesn't show through) */
       .avatar-frame {
         position: absolute;
         right: 90px;
@@ -34,19 +34,27 @@
         width: 540px;
         height: 540px;
         border-radius: 36px;
-        overflow: hidden;
+        background: linear-gradient(135deg, #14142a 0%, #0a0a18 100%);
         box-shadow:
           0 30px 80px rgba(0,0,0,0.55),
           0 0 0 3px rgba(111,111,255,0.35),
           0 0 60px rgba(111,111,255,0.25);
         inset: auto 90px 120px auto;
-        z-index: 5;
+        z-index: 4;
+        pointer-events: none;
       }
-      .avatar-frame video {
-        width: 100%;
-        height: 100%;
+      /* Each avatar video positioned in the same slot */
+      .avatar-video {
+        position: absolute;
+        right: 90px;
+        bottom: 120px;
+        width: 540px;
+        height: 540px;
+        border-radius: 36px;
         object-fit: cover;
-        display: block;
+        inset: auto 90px 120px auto;
+        z-index: 5;
+        overflow: hidden;
       }
 
       /* Title card (open + close) */
@@ -282,23 +290,24 @@
       data-height="1080"
     >
       <!-- Persistent background -->
-      <div class="clip bg" data-start="0" data-duration="63" data-track-index="0"></div>
+      <div id="bg" class="clip bg" data-start="0" data-duration="63" data-track-index="0"></div>
 
-      <!-- Avatar persists 2–62, in corner -->
-      <div id="avatar-wrap" class="clip avatar-frame" data-start="2" data-duration="60" data-track-index="2">
-        <video id="vid-intro" src="assets/intro.mp4"
-               data-start="2" data-duration="19" data-track-index="6"
-               data-has-audio="true" data-volume="1"
-               preload="auto" playsinline></video>
-        <video id="vid-tour" src="assets/tour.mp4"
-               data-start="21" data-duration="22" data-track-index="6"
-               data-has-audio="true" data-volume="1"
-               preload="auto" playsinline></video>
-        <video id="vid-run" src="assets/run.mp4"
-               data-start="43" data-duration="19" data-track-index="6"
-               data-has-audio="true" data-volume="1"
-               preload="auto" playsinline></video>
-      </div>
+      <!-- Avatar frame chrome — visible 2-62s, behind the videos -->
+      <div id="avatar-frame" class="clip avatar-frame" data-start="2" data-duration="60" data-track-index="2"></div>
+
+      <!-- Avatar videos — direct children of root, positioned via .avatar-video -->
+      <video id="vid-intro" class="clip avatar-video" src="assets/intro.mp4"
+             data-start="2" data-duration="19" data-track-index="5"
+             data-has-audio="true" data-volume="1"
+             preload="auto" playsinline></video>
+      <video id="vid-tour" class="clip avatar-video" src="assets/tour.mp4"
+             data-start="21" data-duration="22" data-track-index="5"
+             data-has-audio="true" data-volume="1"
+             preload="auto" playsinline></video>
+      <video id="vid-run" class="clip avatar-video" src="assets/run.mp4"
+             data-start="43" data-duration="19" data-track-index="5"
+             data-has-audio="true" data-volume="1"
+             preload="auto" playsinline></video>
 
       <!-- 0–2s opening title -->
       <div id="title-open" class="clip title-card" data-start="0" data-duration="2" data-track-index="3">
@@ -308,7 +317,7 @@
         </div>
       </div>
 
-      <!-- Scene 1: Repo card (2–21s) -->
+      <!-- Scene 1: RepoReel repo card (2–21s) -->
       <div id="scene-1" class="clip stage" data-start="2" data-duration="19" data-track-index="3">
         <div class="repo-card">
           <div class="label">PROJECT</div>
@@ -391,7 +400,7 @@
       tl.to("#scene-1",            { opacity: 0, duration: 0.4, ease: "power2.in" }, 20.4);
       tl.set("#scene-1", { opacity: 0 }, 21.0);
 
-      // Scene 2: pipeline steps stagger
+      // Scene 2: pipeline steps stagger — starts at 21
       tl.from("#scene-2 .label",   { opacity: 0, x: -40, duration: 0.5, ease: "power2.out" }, 21.3);
       tl.from("#p1", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, 21.6);
       tl.from("#p2", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, 22.4);
@@ -400,11 +409,14 @@
       tl.to("#scene-2",            { opacity: 0, duration: 0.4, ease: "power2.in" }, 42.4);
       tl.set("#scene-2", { opacity: 0 }, 43.0);
 
-      // Scene 3: terminal lines stagger
+      // Scene 3: terminal lines stagger — starts at 43
       tl.from("#scene-3 .terminal", { opacity: 0, y: 30, duration: 0.6, ease: "power2.out" }, 43.3);
       tl.from("#scene-3 .term-body > div", { opacity: 0, y: 8, duration: 0.3, stagger: 0.6, ease: "power2.out" }, 44.0);
       tl.to("#scene-3", { opacity: 0, duration: 0.4, ease: "power2.in" }, 61.4);
       tl.set("#scene-3", { opacity: 0 }, 62.0);
+
+      // Avatar frame fades out just before outro
+      tl.to("#avatar-frame", { opacity: 0, duration: 0.6, ease: "power2.in" }, 61.2);
 
       // Outro
       tl.from("#outro .inner", { opacity: 0, scale: 0.92, duration: 0.6, ease: "power2.out" }, 62.0);
