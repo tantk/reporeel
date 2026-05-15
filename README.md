@@ -21,9 +21,15 @@ Claude fetches the repo, drafts a 3-scene plan, shows it for approval, then rend
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and add your HeyGen API key.
-2. Install the Hyperframes CLI: `npm i -g hyperframes` (or use `npx`).
-3. Symlink or copy `skills/reporeel/` into your Claude Code skills directory.
+See **[INSTALL.md](./INSTALL.md)** for the full 5-minute setup (prerequisites, paste-ready commands for Windows / macOS / Linux, troubleshooting).
+
+Short version:
+
+1. `git clone https://github.com/tantk/reporeel C:\dev\reporeel`
+2. `cp .env.example .env` + add your HeyGen API key
+3. `npm i -g hyperframes`
+4. Symlink `skills/reporeel/` into `~/.claude/skills/`
+5. Restart Claude Code, type `/reporeel <github-url>`
 
 ## Architecture
 
