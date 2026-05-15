@@ -194,7 +194,25 @@ If the render command fails for any other reason, report the error verbatim and 
 
 **You are the designer.** Don't fill in a fixed template — author the Hyperframes composition fresh for this repo's content. Different repos should look different. A graph database deserves a node diagram; a CLI deserves a terminal mock; a web framework deserves a code block + browser preview.
 
-**Required reading before you start:** open `C:\dev\heygen\skills\reporeel\references\hyperframes-patterns.md`. It has the fixed brand constraints (avatar in corner, stage dimensions, lint rules), the required structure, timing math, and several patterns you can adapt.
+**Anti-AI-slop warning:** Your strong default is "dark navy background + purple gradient accent." That's this skill's lazy fallback and it produces generic-looking videos. **Every render should commit to a distinct preset.**
+
+**Required reading — both files, in order:**
+1. `C:\dev\heygen\skills\reporeel\references\style-presets.md` — 8 named visual presets (terminal-devtools / editorial-paper / cyberpunk-neon / swiss-minimal / warm-handwritten / ide-dark / vintage-editorial / bold-brand-block). Each preset has specific Google Fonts, a specific palette, and signature elements. **Pick one preset based on the repo's character, then commit to it.**
+2. `C:\dev\heygen\skills\reporeel\references\hyperframes-patterns.md` — the fixed brand constraints (avatar in corner, stage dimensions, lint rules), required HTML structure, timing math, and layout primitives to use *inside* your chosen preset.
+
+**Style selection rule** — pick by character, NEVER by language:
+- "JavaScript repo" is not a reason to pick the same preset as another JS repo. Look at the repo's tone.
+- A serious infrastructure tool → `terminal-devtools` or `ide-dark`
+- A documentation site or essay-driven library → `editorial-paper` or `vintage-editorial`
+- A design system / UI library → `swiss-minimal`
+- A creative-coding / demos repo → `cyberpunk-neon`
+- An indie / educational / playful project → `warm-handwritten`
+- A polished commercial OSS (frameworks like Next.js, Tailwind, Hugging Face) → `bold-brand-block`, with the slab color matched to the repo's actual brand
+
+Record your choice in `plan.json`:
+```json
+{ "title": "...", "style": "swiss-minimal", "scenes": [...] }
+```
 
 **The fixed parts** (don't redesign these — copy them straight from the patterns doc):
 1. Stage size 1920 × 1080, dark background.
@@ -212,31 +230,43 @@ If the render command fails for any other reason, report the error verbatim and 
 
 **Workflow inside this step:**
 
-1. Probe the 3 scene MP4 durations (you need them for the timing math):
+1. **Pick a style preset.** Read `references/style-presets.md`. Form a one-sentence judgment about the repo's character ("this project feels like X"). Match it to one of the 8 preset IDs. Commit. Don't blend two "to be safe" — that produces washed-out design.
+
+2. **Update plan.json** to record your choice:
+   ```bash
+   # use the Edit tool to add a "style" field at the top level of plan.json
+   ```
+   Value is one of: `terminal-devtools`, `editorial-paper`, `cyberpunk-neon`, `swiss-minimal`, `warm-handwritten`, `ide-dark`, `vintage-editorial`, `bold-brand-block`.
+
+3. **Probe the 3 scene MP4 durations:**
    ```bash
    for s in intro tour run; do
      ffprobe -v error -show_entries format=duration -of csv=p=0 "<OUTPUT_DIR>/scenes/$s.mp4"
    done
    ```
-   Round up each one, add a 1–2s buffer. Then compute `intro_start=2`, `tour_start=2+intro_dur`, `run_start=tour_start+tour_dur`, `outro_start=run_start+run_dur`, `total=outro_start+1`.
+   Round up each, add a 1–2s buffer. Compute `intro_start=2`, `tour_start=2+intro_dur`, `run_start=tour_start+tour_dur`, `outro_start=run_start+run_dur`, `total=outro_start+1`.
 
-2. Read `references/hyperframes-patterns.md` if you haven't.
+4. **Read `references/hyperframes-patterns.md`** for the fixed structural skeleton + timing rules + lint rules. Read **only your chosen preset's section** in `references/style-presets.md` for the exact fonts, palette, and signature elements.
 
-3. Write a custom composition to `C:\dev\heygen\hyperframes-build\index.html` using the `Write` tool. Use the patterns doc's "Required structure" as the skeleton. Paste the avatar slot block verbatim. Design the 3 scene stages around the repo.
+5. **Write a custom composition** to `C:\dev\heygen\hyperframes-build\index.html` using the `Write` tool:
+   - Load the preset's Google Fonts via `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?...">` in `<head>`.
+   - Use the preset's exact `:root` CSS variables (don't substitute — those values were picked deliberately).
+   - Paste the avatar slot block from the patterns doc verbatim. *Optionally swap the frame's accent color to match the preset.*
+   - Design the 3 scene stages using the preset's signature elements. Cross-check against the anti-AI-slop checklist at the bottom of `style-presets.md`.
 
-4. Run the lint loop:
+6. **Run the lint loop:**
    ```bash
    cd C:/dev/heygen/hyperframes-build && npm run check
    ```
    - **0 errors** → proceed to render.
    - **Lint errors** → fix them (most common: video nested in timed element, overlapping clips on same track, missing hard-kill set after fade-out). Re-run check. Loop until clean.
 
-5. Trigger the render via the build script (it copies the scene MP4s into `hyperframes-build/assets/` and runs `npm run render`):
+7. **Trigger the render** via the build script (it copies the scene MP4s into `hyperframes-build/assets/` and runs `npm run render`):
    ```bash
    "C:/Program Files/Git/bin/bash.exe" C:/dev/heygen/scripts/compose-and-render.sh "<OUTPUT_DIR>/plan.json"
    ```
 
-Tell the user up front: "Designing a custom composition for this repo, then rendering — about 2 minutes."
+Tell the user up front: "Picking the `<preset-name>` look for this repo, designing the composition, then rendering — about 2 minutes."
 
 **Fallback:** if you can't confidently design from scratch (very thin README, exotic repo type), copy `templates/composition.html.template` into `hyperframes-build/index.html` and run `scripts/compose.js` to substitute placeholders from `plan.json`. That gives you the previous "fixed-brand" output. Note in the deliver step that you used the fallback template.
 

@@ -196,34 +196,37 @@ The stage is the left/upper region where slide content goes (the rest of the can
 
 Choose what *fits the repo*. A graph database doesn't deserve a terminal mock — give it a node graph. A web framework deserves a code block + browser preview. A CLI tool deserves a terminal.
 
-## Design tokens you can riff on
+## The style preset — pick one, commit to it
 
-Common palette (works for most repos):
+**Don't invent a palette from scratch and don't default to "dark navy + purple."** That's this skill's lazy fallback — the equivalent of frontend-slides' "purple gradient on white" anti-pattern.
 
-```css
-:root {
-  --bg-base: #0a0a14;
-  --bg-glow-1: rgba(111,111,255,0.18);   /* purple */
-  --bg-glow-2: rgba(200,95,69,0.12);     /* warm */
-  --accent: #8a8aff;                     /* purple text accent */
-  --accent-strong: #6f6fff;
-  --success: #6fff8a;
-  --warning: #ffbd2e;
-  --error: #ff5f57;
-  --text: #fff;
-  --text-dim: rgba(255,255,255,0.65);
-}
-```
+Instead: **read [`style-presets.md`](./style-presets.md) and pick one of the 8 presets** based on the repo's character (NOT its language). Each preset specifies:
 
-For language-themed variations:
-- **JavaScript / TypeScript:** use yellow accents (#f7df1e) on dark
-- **Python:** blue/yellow (#3776ab / #ffd43b)
-- **Rust:** burnt orange (#dea584)
-- **Go:** cyan (#00add8)
-- **ML / AI:** teal/magenta gradient
-- **Devtools:** stay with the default purple
+- Specific Google Fonts (load via `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?...">` in the `<head>`)
+- A specific palette as CSS variables
+- Signature layout elements (e.g., bold accent block, hand-drawn underline, sepia rules)
+- A clear vibe and "when it fits" criteria
 
-## Quick patterns you can adapt
+Record your choice in `plan.json` as `"style": "<preset-id>"` so the decision is traceable.
+
+### Anti-AI-slop rules (hard rules — break these and the result is generic)
+
+❌ **No system fonts.** No `-apple-system`, no `BlinkMacSystemFont`, no Arial. Every preset uses Google Fonts. Load them.
+❌ **No defaulting to dark navy + purple.** That's the most overused AI-design palette and it's our lazy fallback. The only preset that uses purple at all is `ide-dark` (Dracula's lavender, used sparingly).
+❌ **No Inter / Roboto for display text.** They're allowed for body in some presets, but never as the headline font.
+❌ **No "balanced" pastel palettes.** Pick a dominant color with a sharp accent. Timid, evenly-weighted color is bad design.
+❌ **No language → color stereotypes.** PyTorch isn't "Python blue"; it's its own orange-flame brand. Match the project's actual identity (homepage, hero image, README badges), not the language tag.
+
+### Positive direction
+
+✅ **Commit to one preset.** Don't blend three "to be safe" — that washes out the design.
+✅ **Use the preset's signature elements.** Swiss-minimal's bold red block; cyberpunk's neon glow; editorial-paper's thin rules. These ARE the design.
+✅ **Match accent to the repo's own brand when you can find it.** README hero images, homepage screenshots, social preview cards all carry brand color information. Use it.
+✅ **The avatar slot border can absorb the preset's accent color.** That ties the host (RepoReel) to the guest (the repo).
+
+## Layout primitives (use INSIDE your chosen preset)
+
+These are **structural patterns**, not visual styles. Pick the layout that fits the content; the chosen preset's fonts/colors/decorations style it. **Never copy these snippets as-is with their default purple/dark-navy look** — restyle them with the preset's tokens.
 
 ### Pattern: Headline + 3 stat tiles (Scene 1 default)
 
@@ -330,10 +333,22 @@ After writing `hyperframes-build/index.html`:
 2. Fix any errors. Re-run check.
 3. When errors are 0, `npm run render -- -o <OUTPUT_DIR>/final.mp4 -q draft` (the compose-and-render.sh script does this for you).
 
-## When in doubt
+## When in doubt — DON'T default to the previous render's look
 
-If the repo doesn't strongly suggest a visual treatment, fall back to the default pattern:
-- Scene 1: headline + tagline + 3 stat tiles
+The cardinal sin is defaulting to the same `terminal-devtools`-ish purple/navy look every time because it's safe. If the repo doesn't strongly suggest a visual treatment, **still pick a preset deliberately** based on a single tone signal:
+
+- README written in dense bullets, lots of badges, monospace code → `terminal-devtools` or `ide-dark`
+- README written like an essay, long prose paragraphs → `editorial-paper` or `vintage-editorial`
+- Repo description has "minimal" / "elegant" / "design" → `swiss-minimal`
+- Repo description has "fast" / "modern" / "framework" → `bold-brand-block`
+- README has emoji, "fun" language, casual tone → `warm-handwritten`
+- README has dark mode screenshots with neon → `cyberpunk-neon`
+
+When you've picked one, **read [`style-presets.md`](./style-presets.md) for that preset's exact fonts and palette** and use them. The whole point is to not look like every other RepoReel video.
+
+## Legacy "When in doubt" (deprecated)
+
+The previous fallback was: *Scene 1 headline + tagline + 3 stat tiles*
 - Scene 2: 4 numbered steps
 - Scene 3: terminal mock
 
