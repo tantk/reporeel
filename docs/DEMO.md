@@ -90,17 +90,19 @@ If both pre-baked MP4s fail to load:
 
 **GitHub repo:** https://github.com/tantk/reporeel (currently private — switch to public before submission)
 
+**Demo videos (YouTube, unlisted):**
+- **Video 1 — RepoReel on RepoReel (the meta video):** https://youtu.be/DBeDU9EDAPs
+- **Video 2 — RepoReel on heygen-com/hyperframes:** https://youtu.be/OrBq-vtvimw
+
 **Key files to point judges at:**
 - `skills/reporeel/SKILL.md` — the slash-command workflow (the product)
 - `scripts/render-scenes.sh` — HeyGen Avatar IV integration (REST API + polling + caching)
 - `hyperframes-build/index.html` — the Hyperframes composition (HTML → MP4 deck with avatar + slides)
 - `reference/default-avatar.json` — Photo Avatar selection (Madison)
 
-**Demo artifacts:**
-- `outputs/reporeel--reporeel/final.mp4` — Act 1 (meta video, ~63s, 12MB)
-- `outputs/heygen-com--hyperframes/final.mp4` — Act 2 (HeyGen repo video, ~75s, 15MB)
-
-**Note:** `outputs/` is gitignored. For the submission, either upload the two final MP4s to YouTube/Vimeo and link them, or zip the outputs folder and attach.
+**Local artifacts (gitignored):**
+- `outputs/reporeel--reporeel/final.mp4` — source of Video 1 (~63s, 12 MB)
+- `outputs/heygen-com--hyperframes/final.mp4` — source of Video 2 (~75s, 15 MB)
 
 ---
 
