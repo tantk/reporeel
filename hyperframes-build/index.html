@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>RepoReel — Hyperframes composition</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0a0a12;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+        color: #fff;
+      }
+      .clip { position: absolute; inset: 0; }
+
+      /* Background gradient — present throughout */
+      .bg {
+        background:
+          radial-gradient(circle at 25% 20%, rgba(111,111,255,0.18) 0%, transparent 50%),
+          radial-gradient(circle at 75% 80%, rgba(200,95,69,0.12) 0%, transparent 55%),
+          linear-gradient(180deg, #0a0a14 0%, #050510 100%);
+      }
+
+      /* Avatar in bottom-right corner */
+      .avatar-frame {
+        position: absolute;
+        right: 90px;
+        bottom: 120px;
+        width: 540px;
+        height: 540px;
+        border-radius: 36px;
+        overflow: hidden;
+        box-shadow:
+          0 30px 80px rgba(0,0,0,0.55),
+          0 0 0 3px rgba(111,111,255,0.35),
+          0 0 60px rgba(111,111,255,0.25);
+        inset: auto 90px 120px auto;
+        z-index: 5;
+      }
+      .avatar-frame video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* Title card (open + close) */
+      .title-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .title-card .inner { padding: 0 6rem; }
+      .title-card .eyebrow {
+        font-size: 28px;
+        letter-spacing: 0.45em;
+        text-transform: uppercase;
+        color: #8a8aff;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+      }
+      .title-card h1 {
+        font-size: 168px;
+        line-height: 1.0;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        background: linear-gradient(135deg, #fff 0%, #b8b8ff 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Scene label — lower-left */
+      .scene-label {
+        position: absolute;
+        bottom: 80px;
+        left: 90px;
+        font-size: 32px;
+        font-weight: 600;
+        background: rgba(20,20,40,0.7);
+        padding: 18px 30px;
+        border-radius: 14px;
+        border: 1px solid rgba(140,140,255,0.25);
+        backdrop-filter: blur(8px);
+        inset: auto auto 80px 90px;
+        width: max-content;
+        z-index: 4;
+      }
+
+      /* Stage panel — where scene content lives (left/upper area, not overlapping avatar) */
+      .stage {
+        position: absolute;
+        top: 100px;
+        left: 90px;
+        right: 700px;
+        bottom: 200px;
+        z-index: 3;
+      }
+      .stage-pad {
+        position: absolute;
+        top: 100px;
+        left: 90px;
+        right: 90px;
+        bottom: 200px;
+        z-index: 3;
+      }
+
+      /* ---- Scene 1: Repo card ---- */
+      .repo-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+      }
+      .repo-card .label {
+        font-size: 22px;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: #8a8aff;
+        font-weight: 500;
+        margin-bottom: 30px;
+      }
+      .repo-card h2 {
+        font-size: 132px;
+        line-height: 0.95;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 40px;
+      }
+      .repo-card .tagline {
+        font-size: 38px;
+        opacity: 0.78;
+        font-weight: 400;
+        line-height: 1.35;
+        max-width: 900px;
+        margin-bottom: 50px;
+      }
+      .repo-card .stats {
+        display: flex;
+        gap: 60px;
+        font-size: 32px;
+      }
+      .repo-card .stat {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .repo-card .stat .num {
+        font-weight: 700;
+        font-size: 44px;
+      }
+      .repo-card .stat .lbl {
+        opacity: 0.55;
+        font-size: 22px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      /* ---- Scene 2: Pipeline diagram ---- */
+      .pipeline {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        gap: 36px;
+      }
+      .pipeline .label {
+        font-size: 22px;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: #8a8aff;
+        font-weight: 500;
+        margin-bottom: 20px;
+      }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        font-size: 38px;
+      }
+      .step .badge {
+        width: 78px;
+        height: 78px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #6f6fff, #4040c0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        font-weight: 700;
+        box-shadow: 0 8px 24px rgba(111,111,255,0.35);
+        flex-shrink: 0;
+      }
+      .step .body {
+        line-height: 1.25;
+      }
+      .step .name {
+        font-weight: 600;
+      }
+      .step .desc {
+        font-size: 24px;
+        opacity: 0.6;
+        margin-top: 6px;
+      }
+
+      /* ---- Scene 3: Terminal mock ---- */
+      .terminal {
+        background: #0c0c18;
+        border-radius: 18px;
+        border: 1px solid rgba(140,140,255,0.2);
+        padding: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      }
+      .term-bar {
+        height: 48px;
+        background: #1a1a28;
+        display: flex;
+        align-items: center;
+        padding: 0 22px;
+        gap: 10px;
+        border-bottom: 1px solid rgba(140,140,255,0.15);
+      }
+      .term-bar .dot {
+        width: 14px; height: 14px; border-radius: 50%;
+      }
+      .term-bar .dot.r { background: #ff5f57; }
+      .term-bar .dot.y { background: #ffbd2e; }
+      .term-bar .dot.g { background: #28c941; }
+      .term-bar .title {
+        margin-left: 18px;
+        font-size: 18px;
+        opacity: 0.5;
+        font-family: "SF Mono", "Consolas", monospace;
+      }
+      .term-body {
+        padding: 36px 40px;
+        font-family: "SF Mono", "Consolas", "Cascadia Code", monospace;
+        font-size: 30px;
+        line-height: 1.55;
+        color: #e0e0ff;
+        flex: 1;
+      }
+      .term-body .prompt { color: #6fff8a; }
+      .term-body .cmd { color: #fff; }
+      .term-body .out { color: #b0b0c8; opacity: 0.85; }
+      .term-body .accent { color: #8a8aff; }
+
+      /* Outro */
+      .outro h2 {
+        font-size: 110px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #b8b8ff 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .outro p {
+        font-size: 36px;
+        opacity: 0.55;
+        margin-top: 1.5rem;
+        font-family: "SF Mono", "Consolas", monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="63"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Persistent background -->
+      <div class="clip bg" data-start="0" data-duration="63" data-track-index="0"></div>
+
+      <!-- Avatar persists 2–62, in corner -->
+      <div id="avatar-wrap" class="clip avatar-frame" data-start="2" data-duration="60" data-track-index="2">
+        <video id="vid-intro" src="assets/intro.mp4"
+               data-start="2" data-duration="19" data-track-index="6"
+               data-has-audio="true" data-volume="1"
+               preload="auto" playsinline></video>
+        <video id="vid-tour" src="assets/tour.mp4"
+               data-start="21" data-duration="22" data-track-index="6"
+               data-has-audio="true" data-volume="1"
+               preload="auto" playsinline></video>
+        <video id="vid-run" src="assets/run.mp4"
+               data-start="43" data-duration="19" data-track-index="6"
+               data-has-audio="true" data-volume="1"
+               preload="auto" playsinline></video>
+      </div>
+
+      <!-- 0–2s opening title -->
+      <div id="title-open" class="clip title-card" data-start="0" data-duration="2" data-track-index="3">
+        <div class="inner">
+          <div class="eyebrow">RepoReel presents</div>
+          <h1 id="title-text">RepoReel</h1>
+        </div>
+      </div>
+
+      <!-- Scene 1: Repo card (2–21s) -->
+      <div id="scene-1" class="clip stage" data-start="2" data-duration="19" data-track-index="3">
+        <div class="repo-card">
+          <div class="label">PROJECT</div>
+          <h2 id="rc-name">RepoReel</h2>
+          <div class="tagline" id="rc-tag">Turn any GitHub repo into a presentable video walkthrough. A Claude Code skill, built on HeyGen Avatar IV + Hyperframes.</div>
+          <div class="stats">
+            <div class="stat"><span class="num">3</span><span class="lbl">scenes / video</span></div>
+            <div class="stat"><span class="num">~3 min</span><span class="lbl">render time</span></div>
+            <div class="stat"><span class="num">$0</span><span class="lbl">infra cost</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="lbl-intro" class="clip scene-label" data-start="2" data-duration="19" data-track-index="4">
+        01 · What is this?
+      </div>
+
+      <!-- Scene 2: Pipeline (21–43s) -->
+      <div id="scene-2" class="clip stage" data-start="21" data-duration="22" data-track-index="3">
+        <div class="pipeline">
+          <div class="label">PIPELINE</div>
+          <div class="step" id="p1"><div class="badge">1</div><div class="body"><div class="name">Fetch repo</div><div class="desc">Claude WebFetches README + GitHub metadata</div></div></div>
+          <div class="step" id="p2"><div class="badge">2</div><div class="body"><div class="name">Plan scenes</div><div class="desc">Claude writes 3 narration scripts in-session</div></div></div>
+          <div class="step" id="p3"><div class="badge">3</div><div class="body"><div class="name">Render avatars</div><div class="desc">HeyGen Avatar IV via REST API</div></div></div>
+          <div class="step" id="p4"><div class="badge">4</div><div class="body"><div class="name">Assemble</div><div class="desc">Hyperframes composes the final MP4</div></div></div>
+        </div>
+      </div>
+      <div id="lbl-tour" class="clip scene-label" data-start="21" data-duration="22" data-track-index="4">
+        02 · How it works
+      </div>
+
+      <!-- Scene 3: Terminal (43–62s) -->
+      <div id="scene-3" class="clip stage" data-start="43" data-duration="19" data-track-index="3">
+        <div class="terminal">
+          <div class="term-bar">
+            <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+            <span class="title">claude code · ~/projects</span>
+          </div>
+          <div class="term-body">
+            <div><span class="prompt">$</span> <span class="cmd">claude</span></div>
+            <div class="out">Claude Code · v1.x · ready</div>
+            <div style="margin-top: 14px;"><span class="prompt">&gt;</span> <span class="cmd">/reporeel </span><span class="accent">https://github.com/heygen-com/hyperframes</span></div>
+            <div class="out" style="margin-top: 14px;">→ Fetching repo metadata...</div>
+            <div class="out">→ Planning 3 scenes...</div>
+            <div class="out">→ Rendering via HeyGen Avatar IV...</div>
+            <div class="out">→ Assembling Hyperframes composition...</div>
+            <div class="out" style="margin-top: 14px; color: #6fff8a;">✓ Done. outputs/heygen-com--hyperframes/final.mp4</div>
+          </div>
+        </div>
+      </div>
+      <div id="lbl-run" class="clip scene-label" data-start="43" data-duration="19" data-track-index="4">
+        03 · Try it
+      </div>
+
+      <!-- Outro 62–63 -->
+      <div id="outro" class="clip outro title-card" data-start="62" data-duration="1" data-track-index="3">
+        <div class="inner">
+          <h2>Made with RepoReel</h2>
+          <p>/reporeel · HeyGen Hackathon 2026</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Opening title
+      tl.from("#title-open .inner", { opacity: 0, y: 30, duration: 0.6, ease: "power2.out" }, 0);
+      tl.to("#title-open", { opacity: 0, duration: 0.5, ease: "power2.in" }, 1.5);
+      tl.set("#title-open", { opacity: 0 }, 2.0);
+
+      // Avatar frame slides in at 2.0
+      tl.from("#avatar-wrap", { opacity: 0, x: 80, duration: 0.6, ease: "power2.out" }, 2.0);
+
+      // Scene 1: repo card stagger
+      tl.from("#scene-1 .label",   { opacity: 0, x: -40, duration: 0.5, ease: "power2.out" }, 2.3);
+      tl.from("#scene-1 h2",       { opacity: 0, y: 30, duration: 0.6, ease: "power2.out" }, 2.5);
+      tl.from("#scene-1 .tagline", { opacity: 0, y: 20, duration: 0.6, ease: "power2.out" }, 2.9);
+      tl.from("#scene-1 .stat",    { opacity: 0, y: 20, duration: 0.5, stagger: 0.15, ease: "power2.out" }, 3.3);
+      tl.to("#scene-1",            { opacity: 0, duration: 0.4, ease: "power2.in" }, 20.4);
+      tl.set("#scene-1", { opacity: 0 }, 21.0);
+
+      // Scene 2: pipeline steps stagger
+      tl.from("#scene-2 .label",   { opacity: 0, x: -40, duration: 0.5, ease: "power2.out" }, 21.3);
+      tl.from("#p1", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, 21.6);
+      tl.from("#p2", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, 22.4);
+      tl.from("#p3", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, 23.2);
+      tl.from("#p4", { opacity: 0, x: -50, duration: 0.5, ease: "power2.out" }, 24.0);
+      tl.to("#scene-2",            { opacity: 0, duration: 0.4, ease: "power2.in" }, 42.4);
+      tl.set("#scene-2", { opacity: 0 }, 43.0);
+
+      // Scene 3: terminal lines stagger
+      tl.from("#scene-3 .terminal", { opacity: 0, y: 30, duration: 0.6, ease: "power2.out" }, 43.3);
+      tl.from("#scene-3 .term-body > div", { opacity: 0, y: 8, duration: 0.3, stagger: 0.6, ease: "power2.out" }, 44.0);
+      tl.to("#scene-3", { opacity: 0, duration: 0.4, ease: "power2.in" }, 61.4);
+      tl.set("#scene-3", { opacity: 0 }, 62.0);
+
+      // Outro
+      tl.from("#outro .inner", { opacity: 0, scale: 0.92, duration: 0.6, ease: "power2.out" }, 62.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "avatar_id": "f20cdc89e0ec4b61bbe453d73019a997",
+  "avatar_name": "Madison (Photo Avatar)",
+  "voice_id": "cef3bc4e0a84424cafcde6f2cf466c97",
+  "voice_name": "Ivy",
+  "language": "English",
+  "notes": "Photo Avatar with Avatar IV + V engine support (confirmed via /v3/avatars/looks?avatar_type=photo_avatar). Studio avatars from /v2/avatars do NOT support Avatar IV. Swap by editing this file; render-scenes.sh reads from here."
+}

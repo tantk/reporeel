@@ -1,0 +1,11 @@
+.env
+outputs/
+_probe_*.json
+node_modules/
+.DS_Store
+*.log
+.claude/
+hyperframes-build/assets/
+hyperframes-build/renders/
+hyperframes-build/node_modules/
+hyperframes-build/.hyperframes-cache/
