@@ -28,30 +28,93 @@ Use the `WebFetch` tool with the GitHub REST API:
 - `https://api.github.com/repos/<owner>/<repo>` — extract: `description`, `language`, `stargazers_count`, `topics`, `default_branch`.
 - `https://raw.githubusercontent.com/<owner>/<repo>/<default_branch>/README.md` — full README text. If 404 (no README), proceed with metadata only.
 
-### Step 3 — Plan the 3 scenes (narration + visual content)
+### Step 3 — Plan the scenes (narration + visual content)
 
-Using the metadata + README, produce **exactly 3 scenes**. Each scene has two parts:
+Using the metadata + README, produce **between 3 and 6 scenes** based on the repo's depth. Each scene has two parts:
 
 - **`narration_text`** — what the avatar SAYS (35–45 words, ~15s spoken)
-- **`stats` / `steps` / `lines`** — what the SLIDE shows alongside the avatar
+- **`stats` / `steps` / `lines`** / etc — what the SLIDE shows alongside the avatar
 
 The narration and the slide must reinforce each other. The narration is *about the repo*. The slides should be too — not about RepoReel.
 
-#### Scene specs
+#### How many scenes?
 
-1. **`intro` — "What is this?" (slide: repo card with stats panel)**
-   - Narration covers: what the repo does, who it's for, the standout feature.
-   - Slide gets 1–3 `stats` to display in a row. **Pick meaningful stats, skip junk.**
+| Scene count | When it fits |
+|---|---|
+| **3** | Small/focused repos: utility libraries, single-purpose tools, CLI commands with one job. (Most repos land here — start with 3 unless there's a strong reason to add more.) |
+| **4** | Adds a "why it matters" / "the problem" scene between intro and the how. Use when the repo solves a non-obvious problem worth explaining. |
+| **5** | Larger frameworks / SDKs. Adds an "architecture overview" before "how to use." Good for repos with multiple subsystems. |
+| **6** | Big monorepos / platforms with multiple major surfaces. Maximum count — past 6 the video is over 2 minutes and viewers drop off. |
 
-2. **`tour` — "How it works" (slide: 4 numbered steps showing the repo's architecture or concepts)**
-   - Narration covers: the top-level mental model of the repo.
-   - Slide gets a `label` (eyebrow text like "ARCHITECTURE", "HOW IT RENDERS", "CORE CONCEPTS") and an array of 3–4 `steps`, each with a `name` and short `desc`.
-   - These should be **about the repo's concepts** (e.g., for commander.js: Options → Commands → Action handlers → Help generation), not RepoReel's pipeline.
+Each scene burns one HeyGen Avatar IV render (~0.5 credit), so **don't pad**. If the README is thin, do 3. Earn the extra scenes.
 
-3. **`run` — "Try it" (slide: terminal showing the repo's install + usage)**
-   - Narration covers: install command, one realistic usage example, what success looks like.
-   - Slide gets a `terminal_title` (e.g. `~/projects · commander`) and an array of `lines`. Each line is either `{prompt, cmd, accent?}` (a typed command) or `{out}` (output text) or `{spacer: true}` (visual gap).
-   - Use commands from the repo's README — `npm install`, `pip install`, `cargo add`, whatever's idiomatic.
+#### Scene structures by count
+
+A **3-scene** classic flow (most repos):
+1. `intro` — What is this?
+2. `tour` — How it works
+3. `run` — Try it
+
+A **4-scene** flow (add "why"):
+1. `intro` — What is this?
+2. `why` — The problem it solves
+3. `tour` — How it works
+4. `run` — Try it
+
+A **5-scene** flow (add architecture):
+1. `intro` — What is this?
+2. `why` — Why it exists
+3. `architecture` — How it's structured
+4. `quickstart` — Get it running
+5. `next` — Where to go from here
+
+A **6-scene** flow (full tour for big repos):
+1. `intro` — What is this?
+2. `why` — The problem
+3. `who` — Who uses it (case studies, integrations)
+4. `architecture` — How it's built
+5. `quickstart` — First-run experience
+6. `roadmap` — What's next
+
+**Scene IDs are flexible** — use whatever fits (`intro`, `why`, `tour`, `architecture`, `quickstart`, `run`, `next`, `roadmap`, etc.). The render pipeline reads scene IDs from `plan.json`; nothing is hardcoded.
+
+#### Per-scene visual content
+
+Each scene needs visual content alongside its narration. Choose based on what the scene is about:
+
+- **Hero / overview scene** (typically `intro`): a "repo card" with stats panel, OR a big headline + tagline, OR a hero image/logo treatment.
+  ```json
+  "stats": [
+    { "num": "18.4k", "lbl": "★ stars" },
+    { "num": "Apache 2.0", "lbl": "license" },
+    { "num": "TypeScript", "lbl": "language" }
+  ]
+  ```
+
+- **Concept / architecture scene** (typically `tour` or `architecture`): a labeled diagram. The default is 3–4 numbered steps; for larger architectures use up to 5–6 nodes.
+  ```json
+  "label": "HOW IT RENDERS",
+  "steps": [
+    { "name": "HTML composition", "desc": "Plain HTML + data attributes" },
+    { "name": "Headless Chrome",  "desc": "Plays it deterministically" },
+    { "name": "Frame capture",    "desc": "Every frame via Puppeteer" },
+    { "name": "FFmpeg encode",    "desc": "Frames → MP4" }
+  ]
+  ```
+
+- **Usage / quickstart scene** (typically `run` or `quickstart`): a terminal mock OR a code block.
+  ```json
+  "terminal_title": "~/projects",
+  "lines": [
+    { "prompt": "$", "cmd": "npx hyperframes init my-video" },
+    { "out": "Created my-video/" },
+    { "spacer": true },
+    { "prompt": "$", "cmd": "npm run render" },
+    { "out": "✓ Render complete. renders/my-video.mp4", "success": true }
+  ]
+  ```
+
+- **Other scene types** (why / who / roadmap): you choose the visual treatment per the chosen style preset. Quote blocks, case-study tiles, timeline strips, etc.
 
 #### Stat picking — be smart
 
@@ -72,7 +135,7 @@ For Scene 1's `stats` panel, pick from this menu, **prioritizing values that say
 
 #### plan.json shape
 
-Write to `<OUTPUT_DIR>/plan.json`:
+Write to `<OUTPUT_DIR>/plan.json`. Scene IDs are flexible — pick what fits the repo's depth.
 
 ```json
 {
@@ -80,30 +143,22 @@ Write to `<OUTPUT_DIR>/plan.json`:
   "description": "<one-line from GitHub repo description>",
   "avatar_id": "f20cdc89e0ec4b61bbe453d73019a997",
   "voice_id": "cef3bc4e0a84424cafcde6f2cf466c97",
+  "style": "<one of the 8 preset IDs from style-presets.md>",
   "scenes": [
     {
       "id": "intro",
       "title": "What is this?",
       "narration_text": "<35-45 words>",
       "cta_label": "Explore",
-      "stats": [
-        { "num": "18.4k", "lbl": "★ stars" },
-        { "num": "Apache 2.0", "lbl": "license" },
-        { "num": "TypeScript", "lbl": "language" }
-      ]
+      "stats": [ /* 1-3 stats — only meaningful values, no zero/empty fillers */ ]
     },
     {
       "id": "tour",
       "title": "How it works",
       "narration_text": "<35-45 words>",
       "cta_label": "Tour the code",
-      "label": "HOW IT RENDERS",
-      "steps": [
-        { "name": "HTML composition", "desc": "Plain HTML + data attributes" },
-        { "name": "Headless Chrome",  "desc": "Plays the composition deterministically" },
-        { "name": "Frame capture",    "desc": "Every frame written via Puppeteer" },
-        { "name": "FFmpeg encode",    "desc": "Frames stitched into a final MP4" }
-      ]
+      "label": "HOW IT WORKS",
+      "steps": [ /* 3-5 steps with name + desc */ ]
     },
     {
       "id": "run",
@@ -111,18 +166,10 @@ Write to `<OUTPUT_DIR>/plan.json`:
       "narration_text": "<35-45 words>",
       "cta_label": "See it run",
       "terminal_title": "~/projects",
-      "lines": [
-        { "prompt": "$", "cmd": "npx hyperframes init my-video" },
-        { "out": "Created my-video/" },
-        { "spacer": true },
-        { "prompt": "$", "cmd": "npm run render" },
-        { "out": "→ Compiling composition..." },
-        { "out": "→ Capturing frames in headless Chrome..." },
-        { "out": "→ Encoding via FFmpeg..." },
-        { "spacer": true },
-        { "out": "✓ Render complete. renders/my-video.mp4", "success": true }
-      ]
+      "lines": [ /* terminal lines: prompt/cmd, out, spacer, accent, success */ ]
     }
+    /* add more scenes (why / architecture / quickstart / next / etc.) up to 6 total
+       only if the repo earns them */
   ]
 }
 ```
@@ -141,21 +188,21 @@ Use the `Write` tool. Create the directory first if needed (PowerShell: `New-Ite
 
 ### Step 4 — Approval gate (CRITICAL — saves render credits)
 
-Print the plan in chat using this exact format:
+Print the plan in chat. Show all N scenes (one block per scene), then the approval prompt:
 
 ```
 RepoReel plan for <owner>/<repo>:
+Style: <preset-id>   Scenes: <N>
 
-[1] Intro (Explore)
+[1] <Scene 1 title> (<cta_label>)
     "<narration_text>"
 
-[2] Tour the code (Tour the code)
+[2] <Scene 2 title> (<cta_label>)
     "<narration_text>"
 
-[3] See it run (See it run)
-    "<narration_text>"
+[... continue for all scenes ...]
 
-Approve? Type 'y' to render (3 HeyGen credits + ~90s Hyperframes encode), 'edit <n> <new text>' to revise scene n, or 'no' to abort.
+Approve? Type 'y' to render (<N> HeyGen credits + ~90s Hyperframes encode), 'edit <n> <new text>' to revise scene n, or 'no' to abort.
 ```
 
 **Wait for the user's response. Do not call any render helpers until the user explicitly approves with 'y'.**

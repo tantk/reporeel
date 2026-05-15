@@ -48,20 +48,26 @@ Every composition needs this skeleton. Don't omit any part.
 </html>
 ```
 
-## Timing math (do this once, then plug in)
+## Timing math (works for any N scenes)
 
-You'll be told the scene durations (intro / tour / run) in seconds. Compute:
+You have N scenes (typically 3, up to 6). For each scene `i` (0-indexed), probe its MP4 duration with `ffprobe`, round up, add 1–2s buffer. Then walk a running cursor:
 
 ```
-intro_start = 2          # after the 2s opening title
-tour_start  = intro_start + intro_dur
-run_start   = tour_start  + tour_dur
-outro_start = run_start   + run_dur
-total       = outro_start + 1
-avatar_dur  = outro_start - intro_start   # avatar frame visible from 2s to outro
+title_dur   = 2                                 # opening title card
+outro_dur   = 1                                 # closing card
+
+cursor = title_dur                              # = 2 (where scene 0 starts)
+for each scene i in 0..N-1:
+    scene_i.start = cursor
+    scene_i.duration = ceil(mp4_duration) + 1   # buffer
+    cursor += scene_i.duration
+
+outro_start = cursor
+total       = outro_start + outro_dur
+avatar_dur  = outro_start - title_dur           # avatar frame visible 2s..outro
 ```
 
-Each scene MP4 duration ≈ the spoken-narration duration plus a small buffer (~1–2s). Always give the slot a duration ≥ the video duration.
+Always give the slot a duration ≥ the video duration. The avatar slot persists across ALL scenes, not just three — the frame is visible from `title_dur` to `outro_start`.
 
 ## Hyperframes data attributes (this is the API)
 
@@ -123,22 +129,24 @@ tl.from("#scene-2 .step", { opacity: 0, x: -50, stagger: 0.15, duration: 0.5 }, 
 
 ## The avatar slot (paste this — don't redesign it)
 
+The avatar frame is one untimed-styled div; the avatar videos are one per scene (so for N=4, write 4 video elements):
+
 ```html
-<!-- frame chrome (untimed wrapper styled CSS) -->
+<!-- frame chrome -->
 <div id="avatar-frame" class="clip avatar-frame"
      data-start="2" data-duration="{{AVATAR_DUR}}" data-track-index="2"></div>
 
-<!-- the 3 narration MP4s, direct children, with audio -->
-<video id="vid-intro" class="clip avatar-video" src="assets/intro.mp4"
-       data-start="{{INTRO_START}}" data-duration="{{INTRO_DUR}}" data-track-index="5"
+<!-- one <video> per scene; src points to assets/<scene-id>.mp4 -->
+<video id="vid-<scene-id-1>" class="clip avatar-video" src="assets/<scene-id-1>.mp4"
+       data-start="{{S1_START}}" data-duration="{{S1_DUR}}" data-track-index="5"
        data-has-audio="true" data-volume="1" preload="auto" playsinline></video>
-<video id="vid-tour" class="clip avatar-video" src="assets/tour.mp4"
-       data-start="{{TOUR_START}}" data-duration="{{TOUR_DUR}}" data-track-index="5"
+<video id="vid-<scene-id-2>" class="clip avatar-video" src="assets/<scene-id-2>.mp4"
+       data-start="{{S2_START}}" data-duration="{{S2_DUR}}" data-track-index="5"
        data-has-audio="true" data-volume="1" preload="auto" playsinline></video>
-<video id="vid-run" class="clip avatar-video" src="assets/run.mp4"
-       data-start="{{RUN_START}}" data-duration="{{RUN_DUR}}" data-track-index="5"
-       data-has-audio="true" data-volume="1" preload="auto" playsinline></video>
+<!-- ... repeat for each scene in plan.scenes[] ... -->
 ```
+
+Use the scene IDs from `plan.json` — not hardcoded `intro/tour/run`. Asset paths follow `assets/<scene-id>.mp4`.
 
 And the matching CSS:
 
