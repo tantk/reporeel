@@ -62,13 +62,13 @@ Same template, different repo. We point RepoReel at `heygen-com/hyperframes` —
 
 **Say (rapid-fire, hit each beat):**
 
-> "**Distribution:** Anthropic Skills marketplace. The product is a single markdown file plus a Bash helper plus a Hyperframes composition. Zero infra cost.
+> "**The stack you just saw:** Claude Code as the driver. WebFetch for the GitHub layer. HeyGen Avatar IV for the presenter. Hyperframes for the composition. All wired together in a single 200-line markdown file. Anyone can read the whole agent.
 >
-> **Both tracks:** Product — every OSS maintainer, every YC founder, every dev influencer needs this. Agent — the pipeline you saw is a real, visible orchestration: WebFetch → reasoning → REST API → Hyperframes engine. Auditable in 200 lines of markdown.
+> **The edge:** Two HeyGen products are load-bearing in one pipeline. Avatar IV for the spoken presenter. Hyperframes — open-source, agent-native — for the slide deck and the final encode. Neither is a swap-in dependency; the agent fails if either is missing.
 >
-> **HeyGen integration:** We use Avatar IV for the presenter and Hyperframes as the composition framework. We're not bolting HeyGen on the side — both products are the load-bearing layers of the output.
+> **The self-demonstration:** the videos themselves were rendered by the same pipeline they describe. Act 1 ran the agent on RepoReel's own repo. Act 2 ran it on HeyGen's Hyperframes repo. Same skill, different input, two valid agent outputs.
 >
-> **Monetization:** Free tier uses public Photo Avatars. Enterprise: bring-your-own avatar, brand kit, custom voice. $99/mo per company. Releases turn into videos automatically."
+> **Where this goes:** publish to a skill registry, add bring-your-own-avatar, and every release on every repo turns into a video automatically. The agent is the product."
 
 ---
 
@@ -106,24 +106,36 @@ If both pre-baked MP4s fail to load:
 
 ---
 
-## Submission writeup
+## Submission writeup (Agent Track)
 
 **Project name:** RepoReel
 
-**One-liner:** A Claude Code skill that turns any GitHub URL into a presentable video walkthrough — HeyGen Avatar IV narrates, Hyperframes composes.
+**Track:** Agent Track
 
-**HeyGen features used:**
-- **Avatar IV** (`POST /v3/videos` with `f20cdc89e0ec4b61bbe453d73019a997` — Madison Photo Avatar) for the spoken presenter
-- **Hyperframes** (`@hyperframes` framework, open-source) as the composition layer — HTML → MP4 via headless Chrome + FFmpeg
+**One-liner:** An AI agent that turns any GitHub repo into a presentable video walkthrough. Claude reads the repo, writes the narration, drives HeyGen Avatar IV for the presenter, and composes the final MP4 with Hyperframes — all from one slash command.
 
-**Tracks:** Product Track primary, Agent Track eligible.
+**The agent stack:**
+- **Driver:** Claude Code (Sonnet / Opus) reading a 200-line `SKILL.md`
+- **Input node:** Claude's `WebFetch` tool → GitHub REST API + raw README
+- **Reasoning node:** Claude (in-session, no external LLM call) writes 3-scene narration
+- **Render node:** **HeyGen Avatar IV** (`POST /v3/videos` with Madison Photo Avatar `f20cdc89e0ec4b61bbe453d73019a997`) — 3 spoken scenes
+- **Composition node:** **Hyperframes** (`@hyperframes`, open source) — HTML slide deck + headless-Chrome frame capture + FFmpeg encode into the final MP4
 
-**Why both tracks:**
-- **Product:** Ships as a markdown skill on Anthropic's marketplace. Zero infra cost. Anyone with Claude Code + a HeyGen API key installs and uses it. Path to revenue: enterprise BYO-avatar tier.
-- **Agent:** The skill IS a visible orchestration pipeline — Claude wires WebFetch → reasoning → Bash → HeyGen REST → Hyperframes render. The "agent stack" is auditable in plain markdown.
+**The pipeline is fully visible.** Every step is in `skills/reporeel/SKILL.md`, in plain English. Auditable, forkable, no hidden state.
 
-**Differentiation from existing work:**
-- `joshua-heygen/viz-pack` (similar Claude-skill direction) outputs static visuals (diagrams, infographics). RepoReel outputs **narrated avatar video** — fundamentally different deliverable.
-- `heygen-com/website-to-hyperframes` converts a URL into a Hyperframe. RepoReel is repo-focused, leverages README + metadata for structured scene planning rather than visual scraping.
+**Why the Agent Track is the right fit:**
+- Both load-bearing tools are external services orchestrated by Claude — that's the textbook definition of an agent pipeline.
+- HeyGen isn't a dependency we bolted on. **Two HeyGen products** are nodes in the pipeline: Avatar IV for the presenter, Hyperframes for the composition. Removing either breaks the agent.
+- The output proves the pipeline ran. The demo videos were rendered by the same agent we're submitting.
 
-**Why HeyGen wins by us winning:** Every RepoReel run consumes HeyGen Avatar IV credits *and* renders via Hyperframes. Both products get usage in every video — and every published video acts as a marketing demo for both.
+**Differentiation from related work in the HeyGen ecosystem:**
+- `joshua-heygen/viz-pack` (similar Claude-skill direction) outputs static visuals (diagrams, infographics). RepoReel outputs **narrated avatar video** — a different deliverable.
+- `heygen-com/website-to-hyperframes` converts a URL into a Hyperframe via visual scraping. RepoReel is repo-focused — it reads README + metadata for **structured scene planning**, not surface-level visuals.
+
+**Roadmap (post-hackathon):**
+- Publish to a skill registry → `npx skills add tantk/reporeel`
+- Make paths repo-relative (drop hard-coded `C:\dev\heygen`)
+- Bring-your-own avatar / brand kit (path to enterprise tier)
+- Vercel one-click deploy of the final MP4 + a landing page
+
+**Why HeyGen wins by us winning:** Every RepoReel run consumes HeyGen Avatar IV credits AND renders via Hyperframes. Both products get usage in every video — and every video acts as a marketing demo for both.
